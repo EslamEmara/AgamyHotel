@@ -34,6 +34,11 @@ class MainApp2(QMainWindow , FORM_CLASS):
         self.setWindowTitle('El-Agamy Hotel')    #sets window name
         self.setWindowIcon(QtGui.QIcon(path.join(path.dirname(__file__), 'assets/logo.png')))
         self.dateEdit.setDateTime(QtCore.QDateTime(QtCore.QDate(int(now.strftime("%Y")), int(now.strftime("%m")), int(now.strftime("%d"))), QtCore.QTime(0, 0, 0)))
+        self.listWidget.itemDoubleClicked.connect(self.click)
+        self.tabWidget.setCurrentIndex(0)
+        #self.showFullScreen()
+
+
 
 
     def connectObjects(self):
@@ -65,6 +70,13 @@ class MainApp2(QMainWindow , FORM_CLASS):
 
             self.listWidget.addItem(item)
 
+    def saveDatatoFile(self):
+        f = open((path.join(path.dirname(__file__), "assets/data.txt")), "w")
+        for app in self.appList:
+            print(app)
+            f.write(app[0]+'-'+app[1]+'-'+app[2]+'\n')
+        f.close()
+
     def submitClick(self):
         value = self.dateEdit.date()
         print(value.toPyDate().strftime("%d/%m/%Y"))
@@ -88,11 +100,7 @@ class MainApp2(QMainWindow , FORM_CLASS):
                       msg.exec();
 
 
-        f = open((path.join(path.dirname(__file__), "assets/data.txt")), "w")
-        for app in self.appList:
-            print(app)
-            f.write(app[0]+'-'+app[1]+'-'+app[2]+'\n')
-        f.close()
+        self.saveDatatoFile()
         self.ParseDataFile()
         self.DisplayDataList()
 
@@ -104,6 +112,39 @@ class MainApp2(QMainWindow , FORM_CLASS):
                  self.listWidget.item(i).setHidden(True)
              else:
                  self.listWidget.item(i).setHidden(False)
+
+    def click(self,item):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Appartment info")
+
+        for app in self.appList:
+            if int(app[0]) == int(item.text().split("\t\t\t")[0]):
+                if app[1] == '1':
+                    dlg.setText("Appartment: " + app[0] + "\nState: " + 'Reserved'+
+                    "\nDate of vacancy: " + app[2] + "\n\n\nDo you want to clear the Appartment?")
+                    dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                    dlg.setIcon(QMessageBox.Question)
+                    button = dlg.exec()
+                    
+                    if button == QMessageBox.Yes:
+                        app[1] = '0'
+                        app[2] = ''
+                        self.saveDatatoFile()
+                        self.ParseDataFile()
+                        self.DisplayDataList()
+
+                    break
+                else:
+                    dlg.setText("Appartment: " + app[0] + "\nState: " + 'Available'+
+                    "\nDate of vacancy: " + app[2] + "\n\n\nDo you want to Reserve the Appartment?")
+                    dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                    dlg.setIcon(QMessageBox.Question)
+                    button = dlg.exec()
+                    
+                    if button == QMessageBox.Yes:
+                        self.tabWidget.setCurrentIndex(1)
+                    break
+
 
 if __name__ == "__main__":          #main loop
     app = QApplication(sys.argv)    #object of class QApplication
